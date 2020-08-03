@@ -34,7 +34,7 @@ db.dbname.drop() => db.students.drop()
 
 # 增删改查
 
-## 增
+## 增 insert
 
 ```
   db.dbname.insert({}) => db.students.insert({name:'zhangsan',age:24})
