@@ -41,7 +41,9 @@ db.dbname.drop() => db.students.drop()
 ```
 
 ## 查 find
+
 > pretty() 方法以格式化的方式来显示所有文档
+
 ```
 {
     "_id" : ObjectId("5f28b0ac552842d899ce8d63"),
@@ -185,6 +187,26 @@ db.students.skit(10).limit(5).count(true)
 ## 改 update
 
 ```
+db.collection.update(
+	<query>,
+	<update>,
+	{
+		upsert: <boolean>,
+		multi: <boolean>,
+		writeConcern: <document>
+	}
+)
+```
+
+> 参数说明
+
+- query : update 的查询条件，类似 sql update 查询内 where 后面的。
+- update : update 的对象和一些更新的操作符（如 $,$inc...）等，也可以理解为 sql update 查询内 set 后面的
+- upsert : 可选，这个参数的意思是，如果不存在 update 的记录，是否插入 objNew,true 为插入，默认是 false，不插入。
+- multi : 可选，mongodb 默认是 false,只更新找到的第一条记录，如果这个参数为 true,就把按条件查出来多条记录全部更新。
+- writeConcern :可选，抛出异常的级别。
+
+```
 db.students.update({name:'zhagnsan'},{$set:{age:16}})
 ```
 
@@ -199,3 +221,134 @@ db.students.update({name:'zhagnsan'},{name:'lisi',age:24,sex:'male'})
 ```
 db.students.remove({id:1})
 ```
+
+# 聚合
+
+## 基本用法
+
+> 集合数据
+
+```
+{
+	_id: ObjectId(7df78ad8902c)
+	title: 'MongoDB Overview',
+	description: 'MongoDB is no sql database',
+	by_user: 'w3cschool.cc',
+	url: 'http://www.w3cschool.cc',
+	tags: ['mongodb', 'database', 'NoSQL'],
+	likes: 100
+},
+{
+	_id: ObjectId(7df78ad8902d)
+	title: 'NoSQL Overview',
+	description: 'No sql database is very fast',
+	by_user: 'w3cschool.cc',
+	url: 'http://www.w3cschool.cc',
+	tags: ['mongodb', 'database', 'NoSQL'],
+	likes: 10
+},
+{
+	_id: ObjectId(7df78ad8902e)
+	title: 'Neo4j Overview',
+	description: 'Neo4j is no sql database',
+	by_user: 'Neo4j',
+	url: 'http://www.neo4j.com',
+	tags: ['neo4j', 'database', 'NoSQL'],
+	likes: 750
+}
+```
+
+| 表达式     | 描述                                           | 实例                                                                                  |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
+| \$sum      | 计算总和。                                     | db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$sum : "$likes"}}}]) |
+| \$avg      | 计算平均值                                     | db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$avg : "$likes"}}}]) |
+| \$min      | 获取集合中所有文档对应值得最小值。             | db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$min : "$likes"}}}]) |
+| \$max      | 获取集合中所有文档对应值得最大值。             | db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$max : "$likes"}}}]) |
+| \$push     | 在结果文档中插入值到一个数组中。               | db.mycol.aggregate([{$group : {_id : "$by_user", url : {$push: "$url"}}}])            |
+| \$addToSet | 在结果文档中插入值到一个数组中，但不创建副本。 | db.mycol.aggregate([{$group : {_id : "$by_user", url : {$addToSet : "$url"}}}])       |
+| \$first    | 根据资源文档的排序获取第一个文档数据。         | db.mycol.aggregate([{$group : {_id : "$by_user", first_url : {$first : "$url"}}}])    |
+| \$last     | 根据资源文档的排序获取最后一个文档数据         | db.mycol.aggregate([{$group : {_id : "$by_user", last_url : {$last : "$url"}}}])      |
+
+## 管道
+
+> 几种常见操作
+
+- \$project：修改输入文档的结构。可以用来重命名、增加或删除域，也可以用于创建计算结果以及嵌套文档。
+
+- $match：用于过滤数据，只输出符合条件的文档。$match 使用 MongoDB 的标准查询操作。
+- \$limit：用来限制 MongoDB 聚合管道返回的文档数。
+- \$skip：在聚合管道中跳过指定数量的文档，并返回余下的文档。
+- \$unwind：将文档中的某一个数组类型字段拆分成多条，每条包含数组中的一个值。
+- \$group：将集合中的文档分组，可用于统计结果。
+- \$sort：将输入文档排序后输出。
+- \$geoNear：输出接近某一地理位置的有序文档。
+
+1.  \$project 实例
+
+```
+db.article.aggregate(
+	{
+		$project : {
+			title : 1 ,
+			author : 1 ,
+		}
+	}
+);
+```
+
+2. \$match 实例
+
+```
+db.articles.aggregate( [
+	{ $match : { score : { $gt : 70, $lte : 90 } } },
+	{ $group: { _id: null, count: { $sum: 1 } } }
+] );
+```
+
+$match用于获取分数大于70小于或等于90记录，然后将符合条件的记录送到下一阶段 $group 管道操作符进行处理
+
+# 数据备份
+
+## 备份
+
+在 MongoDB 安装目录的 bin 目录输入命令 mongodump
+
+```
+mongodump -h dbhost -d dbname -o dbdirectory
+```
+
+- -h
+
+  MongDB 所在服务器地址，例如：127.0.0.1，当然也可以指定端口号：127.0.0.1:27017
+
+- -d
+
+  需要备份的数据库实例，例如：test
+
+- -o
+
+  备份的数据存放位置，例如：c:\data\dump，当然该目录需要提前建立，在备份完成后，系统自动在 dump 目录下建立一个 test 目录，这个目录里面存放该数据库实例的备份数据
+
+| 语法                                              | 描述                           | 实例                                             |
+| ------------------------------------------------- | ------------------------------ | ------------------------------------------------ |
+| mongodump --host HOST_NAME --port PORT_NUMBER     | 该命令将备份所有 MongoDB 数据  | mongodump --host w3cschool.cc --port 27017       |
+| mongodump --dbpath DB_PATH --out BACKUP_DIRECTORY |                                | mongodump --dbpath /data/db/ --out /data/backup/ |
+| mongodump --collection COLLECTION --db DB_NAME    | 该命令将备份指定数据库的集合。 | mongodump --collection mycol --db test           |
+
+## 数据恢复
+
+```
+mongorestore -h dbhost -d dbname  dbdirectory
+```
+
+- -h：
+  MongoDB 所在服务器地址
+
+- -d：
+  需要恢复的数据库实例，例如：test，当然这个名称也可以和备份时候的不一样，比如 test2
+
+- --directoryperdb(备份时去掉--directoryperdb，不然会报错)：
+  备份数据所在位置，例如：c:\data\dump\test，这里为什么要多加一个 test，而不是备份时候的 dump，读者自己查看提示吧！
+
+- --drop：
+  恢复的时候，先删除当前数据，然后恢复备份的数据。就是说，恢复后，备份后添加修改的数据都会被删除，慎用哦！
