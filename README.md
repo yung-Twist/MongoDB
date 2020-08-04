@@ -41,6 +41,21 @@ db.dbname.drop() => db.students.drop()
 ```
 
 ## 查 find
+> pretty() 方法以格式化的方式来显示所有文档
+```
+{
+    "_id" : ObjectId("5f28b0ac552842d899ce8d63"),
+    "name" : "Yao",
+    "age" : 35,
+    "sex" : "male"
+}
+{
+    "_id" : ObjectId("5f28b0bc552842d899ce8d64"),
+    "name" : "Yi",
+    "age" : 28,
+    "sex" : "male"
+}
+```
 
 1.  查询所有
 
