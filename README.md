@@ -352,3 +352,75 @@ mongorestore -h dbhost -d dbname  dbdirectory
 
 - --drop：
   恢复的时候，先删除当前数据，然后恢复备份的数据。就是说，恢复后，备份后添加修改的数据都会被删除，慎用哦！
+
+# 索引
+
+## 索引基础
+
+- 创建索引
+
+```
+ db.students.ensureIndex({name:1})
+```
+
+- 查看集合索引
+
+```
+db.students.getIndexes()
+```
+
+- 删除索引
+
+```
+db.students.dropIndex({name:1})
+```
+
+- 复合索引
+
+```
+db.students.ensureIndex({name:1,age:-1})
+```
+
+> 1 : 升序 -1:降序
+> <br> 该索引被创建后，基于 name 和 age 的查询会用到该索引， 或者是基于 name 的查询
+
+- 索引名
+
+```
+db.students.ensureIndex({age:1},{name:'userIndex'})
+```
+
+## 唯一索引
+
+- 唯一索引
+
+```
+db.students.ensureIndex({name:1},{unique:true})
+```
+
+> 即保证键是唯一的，如果添加相同的键值，mongodb 会报错
+
+- 复合唯一索引
+
+```
+db.students.ensureIndex({userid:1,age;1},{unique:true})
+```
+
+> 即保证复合键值唯一即可
+
+## 索引的一些参数
+
+- **background** : 创建索引过程会阻塞其他数据库操作，background 可指定以后台方式创建索引，默认 false。
+- **quique**: 创建唯一索引。
+- **name**:索引的名称。
+- **dropDup**:在建立唯一索引时是否删除重复记录，默认 false
+## explain
+> 返回查询使用的索引情况，耗时和扫描文档数等统计信息。
+```
+db.students.find().explain()
+```
+> explain executionStats 查询具体的执行时间
+```
+db.students.find().explain(executionStats)
+// 关注输出的 explain.executionStats.executionTimeMills
+```
