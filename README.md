@@ -42,7 +42,7 @@ db.dbname.drop() => db.students.drop()
 
 ## 查 find
 
-1.  去掉重复数据
+1.  查询所有
 
 ```
   db.students.find()
